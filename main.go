@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 	"github.com/nickgatej/Photo-Journey/controllers"
 	"github.com/nickgatej/Photo-Journey/models"
 	"github.com/nickgatej/Photo-Journey/templates"
@@ -53,7 +54,15 @@ func main() {
 	})
 
 	fmt.Println("Starting the server on :3000...")
-	err = http.ListenAndServe(":3000", router)
+
+	csrfKey := "9v2VMyJQtlF6xvYXUHIrnwbIMS1zPpu4"
+	csrfMw := csrf.Protect(
+		[]byte(csrfKey),
+		// TODO: Fix this before deploying
+		csrf.Secure(false), // when set to true, this requires HTTPS connection
+	)
+
+	err = http.ListenAndServe(":3000", csrfMw(router))
 	if err != nil {
 		return
 	}
