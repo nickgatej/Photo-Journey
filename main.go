@@ -33,10 +33,14 @@ func main() {
 	userService := models.UserService{
 		DB: db,
 	}
+	sessionService := models.SessionService{
+		DB: db,
+	}
 
 	// Setup our controllers
 	usersC := controllers.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
@@ -62,7 +66,7 @@ func main() {
 		csrf.Secure(false), // when set to true, this requires HTTPS connection
 	)
 
-	err = http.ListenAndServe(":3000", csrfMw(router))
+	err = http.ListenAndServe("localhost:3000", csrfMw(router))
 	if err != nil {
 		return
 	}
