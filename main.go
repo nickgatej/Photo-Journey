@@ -51,6 +51,8 @@ func main() {
 	router.Post("/signup", usersC.Create)
 	router.Get("/signin", usersC.SignIn)
 	router.Post("/signin", usersC.ProcessSignIn)
+	router.Post("/signout", usersC.ProcessSignOut)
+
 	router.Get("/users/me", usersC.CurrentUser)
 
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
