@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/csrf"
 	"github.com/nickgatej/Photo-Journey/controllers"
+	"github.com/nickgatej/Photo-Journey/migrations"
 	"github.com/nickgatej/Photo-Journey/models"
 	"github.com/nickgatej/Photo-Journey/templates"
 	"github.com/nickgatej/Photo-Journey/views"
@@ -28,6 +29,11 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	err = models.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 
 	// Setup our model services
 	userService := models.UserService{
