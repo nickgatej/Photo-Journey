@@ -13,15 +13,6 @@ import (
 )
 
 func main() {
-	router := chi.NewRouter()
-
-	router.Get("/", controllers.StaticHandler(views.Must(
-		views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
-	router.Get("/contact", controllers.StaticHandler(views.Must(
-		views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
-	router.Get("/faq", controllers.FAQ(
-		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
-
 	// Setup a database connection
 	cfg := models.DefaultPostgresConfig()
 	db, err := models.Open(cfg)
@@ -43,6 +34,18 @@ func main() {
 		DB: db,
 	}
 
+	// Setup middlewares
+	userMiddleware := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
+	csrfKey := "9v2VMyJQtlF6xvYXUHIrnwbIMS1zPpu4"
+	csrfMw := csrf.Protect(
+		[]byte(csrfKey),
+		// TODO: Fix this before deploying
+		csrf.Secure(false), // when set to true, this requires HTTPS connection
+	)
+
 	// Setup our controllers
 	usersC := controllers.Users{
 		UserService:    &userService,
@@ -53,28 +56,33 @@ func main() {
 	usersC.Templates.SignIn = views.Must(views.ParseFS(
 		templates.FS, "signin.gohtml", "tailwind.gohtml"))
 
+	// Setup our router and routes
+	router := chi.NewRouter()
+	router.Use(csrfMw)
+	router.Use(userMiddleware.SetUser)
+	router.Get("/", controllers.StaticHandler(views.Must(
+		views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
+	router.Get("/contact", controllers.StaticHandler(views.Must(
+		views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
+	router.Get("/faq", controllers.FAQ(
+		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 	router.Get("/signup", usersC.New)
 	router.Post("/signup", usersC.Create)
 	router.Get("/signin", usersC.SignIn)
 	router.Post("/signin", usersC.ProcessSignIn)
 	router.Post("/signout", usersC.ProcessSignOut)
 
-	router.Get("/users/me", usersC.CurrentUser)
+	router.Route("/users/me", func(r chi.Router) {
+		r.Use(userMiddleware.RequireUser)
+		r.Get("/", usersC.CurrentUser)
+	})
 
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
 	fmt.Println("Starting the server on :3000...")
-
-	csrfKey := "9v2VMyJQtlF6xvYXUHIrnwbIMS1zPpu4"
-	csrfMw := csrf.Protect(
-		[]byte(csrfKey),
-		// TODO: Fix this before deploying
-		csrf.Secure(false), // when set to true, this requires HTTPS connection
-	)
-
-	err = http.ListenAndServe("localhost:3000", csrfMw(router))
+	err = http.ListenAndServe("localhost:3000", router)
 	if err != nil {
 		return
 	}
