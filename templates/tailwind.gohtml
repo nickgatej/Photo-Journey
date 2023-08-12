@@ -7,41 +7,59 @@
         <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
               rel="stylesheet">
     </head>
-    <body class="h-screen bg-gray-100">
-        <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
-            <nav class="px-8 py-6 flex items-center space-x-12">
-                <div class="text-3xl font-serif">Photo Journey</div>
-                <div class="flex-grow">
-                    <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/">
-                        Home
-                    </a>
-                    <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/contact">
-                        Contact
-                    </a>
-                    <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/faq">
-                        FAQ
+    <body class="min-h-screen bg-gray-100">
+    <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
+        <nav class="px-8 py-6 flex items-center space-x-12">
+            <div class="text-3xl font-serif">Photo Journey</div>
+            <div class="flex-grow">
+                <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/">Home</a>
+                <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/contact">Contact</a>
+                <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/faq">FAQ</a>
+            </div>
+            <div>
+                {{if currentUser}}
+                    <form action="/signout" method="post" class="inline pr-4">
+                        <div class="hidden">
+                            {{csrfField}}
+                        </div>
+                        <button type="submit">Sign out</button>
+                    </form>
+                {{else}}
+                    <a class="pr-4" href="/signin">Sign in</a>
+                    <a class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href="/signup">Sign up</a>
+                {{end}}
+            </div>
+        </nav>
+    </header>
+    <!-- Alerts -->
+    {{if errors}}
+        <div class="py-4 px-2">
+            {{range errors}}
+                <div class="closeable flex bg-red-100 rounded px-2 py-2 text-red-800 mb-2">
+                    <div class="flex-grow">
+                        {{.}}
+                    </div>
+                    <a href="#" onclick="closeAlert(event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </a>
                 </div>
-                <div class="space-x-4">
-                    {{if currentUser}}
-                        <form action="/signout" method="post" class="inline pr-4">
-                            <div class="hidden">
-                                {{csrfField}}
-                            </div>
-                            <button type="submit">Sign out</button>
-                        </form>
-                    {{else}}
-                        <a class="pr-4" href="/signin">Sign in</a>
-                        <a class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href="/signup">Sign up</a>
-                    {{end}}
-                </div>
-            </nav>
-        </header>
+            {{end}}
+        </div>
+    {{end}}
 {{end}}
 
 <!-- Each page's content goes here. -->
 
 {{define "footer"}}
+    <script>
+        function closeAlert(event) {
+            let closeable = event.target.closest(".closeable");
+            closeable.remove();
+            // closeable.classList.add("hidden");
+        }
+    </script>
     </body>
     </html>
 {{end}}
