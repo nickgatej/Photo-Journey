@@ -85,6 +85,10 @@ func main() {
 	pwResetService := &models.PasswordResetService{
 		DB: db,
 	}
+	galleryService := &models.GalleryService{
+		DB: db,
+	}
+
 	emailService := models.NewEmailService(cfg.SMTP)
 
 	// Setup middlewares
@@ -121,6 +125,13 @@ func main() {
 		templates.FS,
 		"reset-pw.gohtml", "tailwind.gohtml",
 	))
+	galleriesC := controllers.Galleries{
+		GalleryService: galleryService,
+	}
+	galleriesC.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"galleries/new.gohtml", "tailwind.gohtml",
+	))
 
 	// Setup our router and routes
 	router := chi.NewRouter()
@@ -147,6 +158,7 @@ func main() {
 		r.Get("/", usersC.CurrentUser)
 	})
 
+	router.Get("/galleries/new", galleriesC.New)
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})

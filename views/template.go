@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path"
 )
 
 type Template struct {
@@ -30,7 +31,7 @@ func Must(t Template, err error) Template {
 }
 
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
-	htmlTpl := template.New(patterns[0])
+	htmlTpl := template.New(path.Base(patterns[0]))
 	htmlTpl = htmlTpl.Funcs(template.FuncMap{
 		"csrfField": func() (template.HTML, error) {
 			return "", fmt.Errorf("csrfField not implemented")
