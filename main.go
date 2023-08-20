@@ -100,6 +100,7 @@ func main() {
 		[]byte(cfg.CSRF.Key),
 		// TODO: Fix this before deploying
 		csrf.Secure(cfg.CSRF.Secure), // when set to true, this requires HTTPS connection
+		csrf.Path("/"),
 	)
 
 	// Setup our controllers
@@ -152,13 +153,18 @@ func main() {
 	router.Post("/forgot-pw", usersC.ProcessForgotPassword)
 	router.Get("/reset-pw", usersC.ResetPassword)
 	router.Post("/reset-pw", usersC.ProcessResetPassword)
-
 	router.Route("/users/me", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
 		r.Get("/", usersC.CurrentUser)
 	})
+	router.Route("/galleries", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(userMiddleware.RequireUser)
+			r.Get("/new", galleriesC.New)
+			r.Post("/", galleriesC.Create)
+		})
+	})
 
-	router.Get("/galleries/new", galleriesC.New)
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
