@@ -137,6 +137,10 @@ func main() {
 		templates.FS,
 		"galleries/edit.gohtml", "tailwind.gohtml",
 	))
+	galleriesC.Templates.Index = views.Must(views.ParseFS(
+		templates.FS,
+		"galleries/index.gohtml", "tailwind.gohtml",
+	))
 
 	// Setup our router and routes
 	router := chi.NewRouter()
@@ -164,6 +168,7 @@ func main() {
 	router.Route("/galleries", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(userMiddleware.RequireUser)
+			r.Get("/", galleriesC.Index)
 			r.Get("/new", galleriesC.New)
 			r.Post("/", galleriesC.Create)
 			r.Get("/{id}/edit", galleriesC.Edit)
