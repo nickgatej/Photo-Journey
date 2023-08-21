@@ -8,6 +8,7 @@ import (
 	"github.com/nickgatej/Photo-Journey/models"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 )
 
@@ -157,8 +158,15 @@ func (g Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	g.Templates.Index.Execute(w, r, data)
 }
 
-func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
+func (g Galleries) filename(w http.ResponseWriter, r *http.Request) string {
 	filename := chi.URLParam(r, "filename")
+	filename = filepath.Base(filename)
+	return filename
+}
+
+func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
+	filename := g.filename(w, r)
+
 	galleryID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusNotFound)
@@ -178,8 +186,39 @@ func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, image.Path)
 }
 
+func (g Galleries) UploadImage(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
+	if err != nil {
+		return
+	}
+	err = r.ParseMultipartForm(5 << 20) // 5mb
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	fileHeaders := r.MultipartForm.File["images"]
+	for _, fileHeader := range fileHeaders {
+		file, err := fileHeader.Open()
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		fmt.Printf("Attempting to upload %v for gallery %d.\n",
+			fileHeader.Filename, gallery.ID)
+		err = g.GalleryService.CreateImage(gallery.ID, fileHeader.Filename, file)
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
+}
+
 func (g Galleries) DeleteImage(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
+	filename := g.filename(w, r)
+
 	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
 	if err != nil {
 		return
