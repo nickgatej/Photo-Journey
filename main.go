@@ -171,6 +171,7 @@ func main() {
 	})
 	router.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleriesC.Show)
+		r.Get("/{id}/images/{filename}", galleriesC.Image)
 		r.Group(func(r chi.Router) {
 			r.Use(userMiddleware.RequireUser)
 			r.Get("/", galleriesC.Index)
