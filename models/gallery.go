@@ -157,6 +157,18 @@ func (service GalleryService) galleryDir(id int) string {
 	return filepath.Join(imagesDir, fmt.Sprintf("gallery-%d", id))
 }
 
+func (service *GalleryService) DeleteImage(galleryID int, filename string) error {
+	image, err := service.Image(galleryID, filename)
+	if err != nil {
+		return fmt.Errorf("deleting image: %w", err)
+	}
+	err = os.Remove(image.Path)
+	if err != nil {
+		return fmt.Errorf("deleting image: %w", err)
+	}
+	return nil
+}
+
 func hasExtension(file string, extensions []string) bool {
 	for _, ext := range extensions {
 		file = strings.ToLower(file)
