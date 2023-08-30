@@ -12,3 +12,14 @@ services:
       ADMINER_DESIGN: dracula
     ports:
       - 3334:8080
+
+  tailwind:
+    build:
+      context: ./tailwind
+      dockerfile: Dockerfile
+    tty: true
+    restart: always
+    volumes:
+      - ./tailwind:/src
+      - ./assets:/dst
+      - ./templates:/templates
